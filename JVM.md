@@ -127,11 +127,13 @@ Java7永久代 Java8 元空间
 
 **Java优化主要是优化堆**
 
--Xms	设置初始分配大小，默认物理内存的1/64
+**-Xms	设置初始分配大小，默认物理内存的1/64**
 
--Xmx	最大分配内存，默认为物理内存的1/4
+**-Xmx	最大分配内存，默认为物理内存的1/4**
 
--XX:+PrintGCDetails	输出详细的GC处理日志
+将堆的最小值-Xms与-Xmx设置一样可避免自动扩展
+
+**-XX:+PrintGCDetails	输出详细的GC处理日志**
 
 	通过设置VM参数-Xms1024m -Xmx1024m -XX:+PrintGCDetails
 	
