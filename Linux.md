@@ -208,6 +208,19 @@ st:来自于一个虚拟机偷取的CPU时间的百分比
 	小写u	撤销文档中的输入操作
 	行号+shift+g	光标移动到指定行号
 
+	#插入命令
+	o 在当前行之后插入一行
+	O 在当前行之前插入一行
+	a 在当前位置后插入
+	A 在当前行尾插入
+
+	#撤销和重做
+	u 撤销（Undo）
+	U 撤销对整行的操作
+	Ctrl + r 重做（Redo），即撤销的撤销。
+
+	#退出命令
+	:e! 放弃所有修改，并打开原来文件。
 
 **开机、重启和用户登录注销**
 	
@@ -667,5 +680,304 @@ st:来自于一个虚拟机偷取的CPU时间的百分比
 	D=$(date)
 	echo D=$D
 
+**设置环境变量**
 
+	export 变量名=变量值 (将shell变量输出为环境变量)
+	source 配置文件(让修改后的配置信息立即生效)
+	echo $变量名(查询环境变量的值)
 
+	#多行注释
+	:<<!
+
+	!
+
+**位置参数变量**
+
+	$n n为数字,$0代表命令本身,$1-$9代表第一到第九个参数，十以上的参数需要用大括号包含,如${10}
+	$* 这个变量代表命令行中所有的参数,$*把所有的参数看成一个整体
+	$@ 这个变量也代表命令行中所有的参数，不过$@把每个参数区分对待
+	$# 这个变量代表命令行中所有参数的个数
+
+	#!/bin/bash
+	echo "$0 $1 $2"
+	echo "$*"
+	echo "$@"
+	echo "参数个数$#"
+
+	[root@iZwz9eq3yzu5iw2o05coffZ shell]# ./positionPara.sh 30 60
+	./positionPara.sh 30 60
+	30 60
+	30 60
+	参数个数2
+
+**预定义变量**
+
+	$$ 当前进程的进程号(PID)
+	$! 后台运行的最后一个进程的进程号(PID)
+	$? 最后一次执行的命令的返回状态。如果然这个变量的值为0，证明上一个命令正确执行;如果这个变量的值为非0(具体是哪个数，由命令自己来决定)，则证明上一个命令执行不正确了
+
+	echo "当前的进程号=$$"
+	#后台的方式运行myShell.sh
+	./myShell.sh &
+	echo "最后的进程号=$!"
+	echo "执行的值=$?"
+
+**运算符**
+
+	$((运算式)) 或 $[运算式]
+	expr m + n 注意expr运算符间要有空格
+	expr m - n
+	expr \*,/,% 乘，除，取余
+
+	#!/bin/bash
+	RESULT1=$(((2+3)*4))
+	echo "RESULT1=$RESULT1"
+	
+	#推荐用这种方式
+	RESULT2=$[(2+3)*4]
+	echo "RESULT2=$RESULT2"
+	
+	TEMP=`expr 2 + 3`
+	RESULT3=`expr $TEMP \* 4`
+	echo "RESULT3=$RESULT3"
+	
+	SUM=$[$1+$2]
+	echo "SUM=$SUM"
+
+**条件判断**
+
+	[ condition ] 	注意condition前后要有空格
+	#非空返回true,可使用$?(0为true,>1为false)
+
+	常用判断条件
+	1)两个整数的比较
+	= 字符串比较
+	-lt 小于
+	-le 小于等于
+	-eq 等于
+	-gt 大于
+	-ge 大于等于
+	-ne 不等于
+	2)按照文件权限进行判断
+	-r 有读的权限[ -r 文件 ]
+	-w 有写的权限
+	-x 有执行的权限
+	3)按照文件类型进行判断
+	-f 文件存在并且是一个常规的文件
+	-e 文件存在
+	-d 文件存在并是一个目录
+
+	#案例1 "ok"是否等于"ok"
+	if [ "ok" = "ok" ]
+	then
+	        echo "equal"
+	fi
+
+	#案例2 23是否大于等于22
+	if [ 23 -ge 22 ]
+	then
+	        echo "大于"
+	fi
+
+	#案例3 /shell/aaa.txt目录中的文件是否存在	
+	if [ -e /shell/aaa.txt ]
+	then
+	        echo "存在"
+	fi
+
+**流程控制**
+
+**if语句**
+
+	if[ 条件判断式 ];then
+		程序
+	fi
+
+	if[ 条件判断式 ]
+	then
+		程序
+	elif[ 条件判断式 ]
+	then
+		程序
+	if
+	#注意:1[ 条件判断式 ],中括号和条件判断式之间必须有空格 2 推荐使用第二种方式
+
+	#案例 如果输入的参数大于等于60,则输出"及格了",如果小于60,则输出"不及格"
+	#!/bin/bash
+	if [ $1 -ge 60 ]
+	then
+	        echo "及格了"
+	elif [ $1 -lt 60 ]
+	then
+	        echo "不及格"
+	fi
+
+**case语句**
+
+	case $变量名 in
+	"值1")
+		如果变量的值等于值1，则执行程序1
+	;;
+	"值2")
+		如果变量的值等于值2，则执行程序2
+	;;
+	.....
+	*)
+		如果变量的值都不是以上的值，则执行此程序
+	;;
+	esac
+
+	案例 当命令行参数是1时,输出“周一”,是2时,就输出"周二",其它情况输出"other"
+	#!/bin/bash
+	case $1 in
+	"1")
+	        echo "周一"
+	;;
+	"2")    echo "周二"
+	;;
+	*)
+	        echo "other"
+	;;
+	esac
+
+**for循环**
+
+	for 变量 in 值1 值2 值3
+	do
+		程序
+	done
+
+	案例 打印命令行输入的参数
+
+	#!/bin/bash
+	for i in "$*"
+	do
+	        echo "the num is $i"
+	done
+
+	#[root@iZwz9eq3yzu5iw2o05coffZ shell]# ./testif1.sh 10 20 30 40
+	#the num is 10 20 30 40
+
+	#!/bin/bash
+	for j in "$@"
+	do
+	        echo "num is $j"
+	done
+
+	#[root@iZwz9eq3yzu5iw2o05coffZ shell]# ./testfor.sh 10 20 30
+	#num is 10
+	#num is 20
+	#num is 30
+
+	for((初始值;循环控制条件;变量变化))
+	do
+		程序
+	done
+
+	案例 从1加到100的值输出显示
+	#!/bin/bash
+	SUM=0
+	for((i=1;i<=100;i++))
+	do
+	        SUM=$[$SUM+$i]
+	done
+	echo "SUM=$SUM"
+
+	#SUM=5050
+
+**while循环**
+
+	while [ 条件判断式 ]
+	do
+		程序
+	done
+
+	案例 从命令行输入一个数n,统计从1+..+n的值是多少
+	#!/bin/bash
+	SUM=0
+	i=0
+	while [ $i -le $1 ]
+	do
+	        SUM=$[$SUM+$i]
+	        i=$[$i+1]
+	done
+	echo "SUM=$SUM"
+	
+	#[root@iZwz9eq3yzu5iw2o05coffZ shell]# ./testwhile.sh 10
+	#SUM=55    
+
+**read读取控制台输入**
+
+	read(选项)(参数)
+	-p:指定读取值时的提示符;
+	-t:指定读取值时等待的时间(秒),如果没有在指定时间内输入,就不再等待了
+	变量:指定读取值的变量名
+
+	案例 读取控制台输入一个num值
+	#!/bin/bash
+	read -p "请输入一个数字num=" num
+	echo "你输入的值是num=$num"
+
+	#请输入一个数字num=10
+	#你输入的值是num=10
+
+	案例 读取控制台输入一个NUM值，在10内输入
+	#!/bin/bash
+	read -t 10 -p "请输入一个数字num=" num
+	echo "你输入的数字num是$num" 
+
+# 函数 #
+**系统函数**
+
+	basename [pathname] [suffix]
+	返回完整路径最后/的部分，常用于获取文件名
+
+	basename [string] [suffix] basename命令会删掉所有的前缀包括最后一个('/')字符，然后将字符串显示出来
+
+	选项:suffix为后缀,如果suffix被指定了，basename会将pathname或string中的suffix去掉.
+
+	[root@iZwz9eq3yzu5iw2o05coffZ shell]# basename /shell/aaa.txt 
+	aaa.txt
+	[root@iZwz9eq3yzu5iw2o05coffZ shell]# basename /shell/aaa.txt .txt
+	aaa
+
+	dirname 返回完整路径最后/的前面的部分,常用于返回路径部分
+	dirname 文件绝对路径 从给定的包含绝对路径的文件名中云除文件名(非目录的部分)，然后返回剩下的路径
+
+	[root@iZwz9eq3yzu5iw2o05coffZ shell]# dirname /shell/aaa.txt 
+	/shell
+
+**自定义函数**
+	
+	[function] funname[()]
+	{
+		Action;
+		[return int;]
+	}
+	调用直接写函数名:funname [值]
+
+	#!/bin/bash
+	function getSum()
+	{
+	        SUM=$[$num1+$num2]
+	        echo "SUM=$SUM"
+	}
+	read -p "请输入第一个数" num1
+	read -p "请输入第二个数" num2
+	
+	getSum $num1 $num2
+
+	#[root@iZwz9eq3yzu5iw2o05coffZ shell]# ./testfun.sh 
+	#请输入第一个数10
+	#请输入第二个数20
+	#SUM=3
+
+Shell编程综合案例
+
+1）每天凌晨2：10备份数据库atguiguDB到/data/backup/db
+
+2)备份开始和备份结束能够给出相应的提示信息
+
+3)备份后的文件要求以备份时间文件名，并打包成.tar.gz的形式，比如:2018-03-12_230201.tar.gz
+
+4在备份的同时，检查是否有10天前备份的数据库文件，如果有就将其删除
