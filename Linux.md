@@ -981,3 +981,44 @@ Shell编程综合案例
 3)备份后的文件要求以备份时间文件名，并打包成.tar.gz的形式，比如:2018-03-12_230201.tar.gz
 
 4在备份的同时，检查是否有10天前备份的数据库文件，如果有就将其删除
+
+	#!/bin/bash
+
+	BACKUP=/bakcup/
+	DATETIME=$(date "+%Y-%m-%d_%H%M%S")
+	
+	echo "=============开始备份=============="
+	echo "=============备份的路径是 $BACKUP$DATETIME.tar.gz"
+	
+	#主机
+	HOST="120.77.237.175"
+	#端口
+	PORT="9306"
+	#用户名
+	DB_USER="root"
+	#密码
+	DB_PWD="#edc@wsx123"
+	#备份数据库名
+	DATABASE="sys"
+	#创建备份的路径
+	#如果备份的路径文件夹存在，就使用，否则就创建
+	if [ ! -d "$BACKUP$DATETIME" ]
+	then
+		mkdir -p "$BACKUP$DATETIME"
+	fi
+	#执行mysql的备份数据库指令
+	mysqldump -u${DB_USER} -p${DB_PWD} -h${HOST} -P${PORT} $DATABASE | gzip > $BACKUP$DATETIME/$DATETIME.tar.gz
+	#打包备份文件
+	cd #BACKUP
+	tar -zcvf $DATETIME.tar.gz $DATETIME
+	#删除临时目录
+	rm -rf $BACKUP$DATETIME
+	
+	#删除10天前的备份文件
+	find $BACKUP -mtime +10 -name "*.tar.gz" -exec rm -rf {} \;
+	echo "========备份文件成功=========="
+
+	#设置定时任务
+	crontab -e
+
+	10 2 * * * /usr/sbin/mysql_db_backup.sh
