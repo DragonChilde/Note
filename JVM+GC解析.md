@@ -17,7 +17,7 @@ GC的三和种收集方法的优缺点？
 标记清除
 
 优点：大面积标记不会浪费时间
-
+软引用
 缺点：会产生内存碎片
 
 标记整理
@@ -203,6 +203,7 @@ JVM的参数类型有三种：
 **-XX:MaxTenuringThreshold** 设置垃圾最大年龄，就是年轻区到老年区经历的最大次数（默认最大只能设置15，只能设置0-15）
 
 ## 强引用、软引用、弱引用、虚引用分别是什么？ ##
+
 **一般赋值的引用都是强引用(java.lang.ref.Reference）默认支持**
 
 当内存不足，JVM开始垃圾回收，**对于强引用的对象，就算是出现了OOM也不会对该对象进行回收，死都不收**。
@@ -217,7 +218,7 @@ JVM的参数类型有三种：
     System.gc();
     System.out.println(obj2);	//可以正常打印出来不会被垃圾回收java.lang.Object@1b6d3586
 
-软引用（java.lang.ref.SoftReference）
+**软引用（java.lang.ref.SoftReference）**
 
 软引用是一种相对强化了一些的引用，需要用java.lang.ref.SoftReference类来实现，可以让对象豁免一些垃圾收集。
 
