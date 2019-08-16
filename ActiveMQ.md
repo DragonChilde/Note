@@ -687,6 +687,40 @@ pom文件引入
 
 # SpringBoot整合ActiveMQ #
 
+pom
+
+	<properties>
+        <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-activemq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+
+**生产者Queue**
+
 **application.yml**
 
 	server:
@@ -736,6 +770,15 @@ pom文件引入
 	    public void produceMessage(){
 	        jmsMessagingTemplate.convertAndSend(queue,UUID.randomUUID().toString().substring(0,6));
 	    }
+
+		  /*设置定时发送*/
+		/**启动main()方法自动发送**/
+		/***main()方法必须开启@EnableScheduling才能定时发送**/
+	    @Scheduled(fixedDelay = 3000L)  /*每3秒发送一次*/
+	    public void produceMessageSchedule(){
+	        jmsMessagingTemplate.convertAndSend(queue,"*********Schedule:"+UUID.randomUUID().toString().substring(0,6));
+	        System.out.println("定时发送完成!");
+	    }
 	}
 
 
@@ -745,3 +788,50 @@ pom文件引入
     public void testProduceSendMsg(){
         queueProduce.produceMessage();
     }
+
+**消费者Queue**(配置相同)
+
+**com.my.springboot.consumer.springbootconsumer.Consume**
+
+	@Component
+	public class QueueConsume {
+		/**启动监听器自动接收**/
+		/**main()方法自启接收**/
+	    @JmsListener(destination = "${myqueue}")
+	    public void receiveMsg(TextMessage textMessage) throws Exception{
+	        System.out.println("消费者接收到的消息是："+textMessage.getText());
+	    }
+	}
+
+**Topic消费者和生产者基本同上，只是配置文件和队列改下**
+
+application.yml
+
+	server:
+	  port: 6666
+	spring:
+	  activemq:
+	    broker-url: tcp://120.77.237.175:61616
+	    user: admin
+	    password: admin
+	  jms:
+	    pub-sub-domain: true # false = queue    true =  topic
+	
+	#自定义队列名称
+	mytopic:
+	  boot-activemq-topic
+
+**com.springboot.consumer.topic.Config**
+
+	@Component
+	@EnableJms
+	public class MyBean {
+	    @Value("${mytopic}")
+	    private String myTopic;
+	
+	    @Bean
+	    public Topic topic(){
+	        return new ActiveMQTopic(myTopic);
+	    }
+	}
+
