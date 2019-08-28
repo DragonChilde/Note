@@ -49,7 +49,7 @@ BASE其实是下面三个术语的缩写：
 
 **Redis的五大数据类型**
 
-**- String（字符串）**
+- **String（字符串）**
 
 string是redis最基本的类型，你可以理解成与Memcached一模一样的类型，一个key对应一个value。
  
@@ -57,7 +57,7 @@ string类型是二进制安全的。意思是redis的string可以包含任何数
  
 string类型是Redis最基本的数据类型，一个redis中字符串value最多可以是512M
 
-**- Hash（哈希，类似java里的Map）**
+- **Hash（哈希，类似java里的Map）**
 
 Redis hash 是一个键值对集合。
 
@@ -65,17 +65,17 @@ Redis hash是一个string类型的field和value的映射表，hash特别适合�
  
 类似Java里面的Map<String,Object>
 
-**- List（列表）**
+- **List（列表）**
 
 Redis 列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素导列表的头部（左边）或者尾部（右边）。
 
 它的底层实际是个链表
 
-**- Set（集合）**
+- **Set（集合）**
 
 Redis的Set是string类型的无序集合。它是通过HashTable实现实现的
 
-**- Zset(sorted set：有序集合)**
+- **Zset(sorted set：有序集合)**
 
 Redis zset 和 set 一样也是string类型元素的集合,且不允许重复的成员。
 
@@ -88,12 +88,12 @@ zset的成员是唯一的,但分数(score)却可以重复。
 
 **Redis键(key)**
 
--  keys *
--  exists key的名字，判断某个key是否存在
--  move key db   --->当前库就没有了，被移除了
--  expire key 秒钟：为给定的key设置过期时间
--  ttl key 查看还有多少秒过期，-1表示永不过期，-2表示已过期(过期就代表消失了)
--  type key 查看你的key是什么类型
+- keys *
+- exists key的名字，判断某个key是否存在
+- move key db   --->当前库就没有了，被移除了
+- expire key 秒钟：为给定的key设置过期时间
+- ttl key 查看还有多少秒过期，-1表示永不过期，-2表示已过期(过期就代表消失了)
+- type key 查看你的key是什么类型
 
 		127.0.0.1:9379> set s1 v1		##设置key为s1,value v1
 		OK
@@ -111,11 +111,11 @@ zset的成员是唯一的,但分数(score)却可以重复。
 		"v1"
 		127.0.0.1:9379> type s1			##查看key为s1的的类型，返回String类型
 		string
-		127.0.0.1:9379> expire s1 10
+		127.0.0.1:9379> expire s1 10	##给key为s1设置10秒后过期
 		(integer) 1
 		127.0.0.1:9379> get s1
 		"v1"
-		127.0.0.1:9379> ttl s1
+		127.0.0.1:9379> ttl s1			##查看key为s1的过期时间
 		(integer) 4
 		127.0.0.1:9379> ttl s1
 		(integer) 1
@@ -126,33 +126,257 @@ zset的成员是唯一的,但分数(score)却可以重复。
 
 **Redis字符串(String)**
 
-**- set/get/del/append/strlen**
+- **set/get/del/append/strlen**
 
-**- Incr/decr/incrby/decrby,一定要是数字才能进行加减**
+		127.0.0.1:9379> set k1 v1
+		OK
+		127.0.0.1:9379> get k1
+		"v1"
+		127.0.0.1:9379> append k1 111
+		(integer) 5
+		127.0.0.1:9379> get k1
+		"v1111"
+		127.0.0.1:9379> strlen k1		##获取key为k1的长度
+		(integer) 5
+		127.0.0.1:9379> set k1 v1		##key为k1的值是可以被覆盖的
+		OK
+		127.0.0.1:9379> get k1
+		"v1"
 
-**- getrange/setrange**
+- **Incr/decr/incrby/decrby,一定要是数字才能进行加减**
+
+		127.0.0.1:9379> set k2 1		##设置key为k2的值为1
+		OK
+		127.0.0.1:9379> Incr k2			##k2累加
+		(integer) 2
+		127.0.0.1:9379> get k2			
+		"2"
+		127.0.0.1:9379> decr k2			##k2递减
+		(integer) 1
+		127.0.0.1:9379> get k2
+		"1"
+		127.0.0.1:9379> incrby k2 5		##k2累加5
+		(integer) 6
+		127.0.0.1:9379> get k2
+		"6"
+		127.0.0.1:9379> decrby k2 1		##k2递减1
+		(integer) 5
+		127.0.0.1:9379> get k2
+		"5"
+		127.0.0.1:9379> incr k1 4		##当不为数字时报error
+		(error) ERR wrong number of arguments for 'incr' command
+
+
+- **getrange/setrange**
 
 getrange:获取指定区间范围内的值，类似between......and的关系
 从零到负一表示全部
 
 setrange设置指定区间范围内的值，格式是setrange key值 具体值
 
-**-  setex(set with expire)/setnx(set if not exist)**
+	127.0.0.1:9379> set k1 v1
+	OK
+	127.0.0.1:9379> get k1
+	"v1"
+	127.0.0.1:9379> append k1 12345678
+	(integer) 10
+	127.0.0.1:9379> getrange k1 1 3
+	"112"
+	127.0.0.1:9379> setrange k1 1 123456789
+	(integer) 10
+	127.0.0.1:9379> get k1
+	"v123456789"
+
+
+- **setex(set with expire)/setnx(set if not exist)**
 
 setex:设置带过期时间的key，动态设置。
 
-setex 键 秒值 真实值
-
 setnx:只有在 key 不存在时设置 key 的值。
 
-**- mset/mget/msetnx(如果有一个失败，全部都设置失败)**
+	127.0.0.1:9379> setex k1 5 v1		##setex 键 秒值 真实值
+	OK
+	127.0.0.1:9379> get k1
+	"v1"
+	127.0.0.1:9379> ttl k1
+	(integer) -2
+	127.0.0.1:9379> get k1
+	(nil)
+	127.0.0.1:9379> setnx k1 v1
+	(integer) 1
+	127.0.0.1:9379> setnx k1 v2
+	(integer) 0
+
+- **mset/mget/msetnx(如果有一个失败，全部都设置失败)**
 
 mset:同时设置一个或多个 key-value 对。
 
 mget:获取所有(一个或多个)给定 key 的值。
 
-**-  getset(先get再set)**
+	127.0.0.1:9379> mset k1 v1 k2 v2
+	OK
+	127.0.0.1:9379> mget k1 k2
+	1) "v1"
+	2) "v2"
+	127.0.0.1:9379> msetnx k2 v2 k3 v3
+	(integer) 0
+
+- **getset(先get再set)**
 
 getset:将给定 key 的值设为 value ，并返回 key 的旧值(old value)。
 
 简单一句话，先get然后立即set
+
+	127.0.0.1:9379> set k2 v2
+	OK
+	127.0.0.1:9379> getset k2 v22
+	"v2"
+	127.0.0.1:9379> get k2
+	"v22"
+
+**Redis列表(List)**
+
+- **lpush/rpush/lrange**
+
+		127.0.0.1:9379> lpush list01 1 2 3 4 5 6
+		(integer) 6
+		127.0.0.1:9379> rpush list02 1 2 3 4 5 6
+		(integer) 6
+		127.0.0.1:9379> lrange list01 0 -1
+		1) "6"
+		2) "5"
+		3) "4"
+		4) "3"
+		5) "2"
+		6) "1"
+		127.0.0.1:9379> lrange list02 0 -1
+		1) "1"
+		2) "2"
+		3) "3"
+		4) "4"
+		5) "5"
+		6) "6"
+
+- **lpop/rpop**
+
+		127.0.0.1:9379> lpop list01
+		"6"
+		127.0.0.1:9379> rpop list02
+		"6"
+		127.0.0.1:9379> lrange list 0 -1
+		(empty list or set)
+		127.0.0.1:9379> lrange list01 0 -1
+		1) "5"
+		2) "4"
+		3) "3"
+		4) "2"
+		5) "1"
+		127.0.0.1:9379> lrange list02 0 -1
+		1) "1"
+		2) "2"
+		3) "3"
+		4) "4"
+		5) "5"
+
+- **lindex，按照索引下标获得元素(从上到下)**
+
+		127.0.0.1:9379> lindex list02 0
+		"1"
+		127.0.0.1:9379> lindex list01 0
+		"5"
+
+- **llen**
+
+		127.0.0.1:9379> llen list01
+		(integer) 5
+
+- **lrem key 删N个value**
+
+		127.0.0.1:9379> lpush list03 1 1 1 2 2 2 3 3 3 4 4 4
+		(integer) 12
+		127.0.0.1:9379> lrem list03 2 3
+		(integer) 2
+		127.0.0.1:9379> lrange list03 0 -1
+		 1) "4"
+		 2) "4"
+		 3) "4"
+		 4) "3"
+		 5) "2"
+		 6) "2"
+		 7) "2"
+		 8) "1"
+		 9) "1"
+		10) "1"
+
+- **ltrim key 开始index 结束index，截取指定范围的值后再赋值给key**
+
+		127.0.0.1:9379> lrange list01 0 -1
+		1) "5"
+		2) "4"
+		3) "3"
+		4) "2"
+		5) "1"
+		127.0.0.1:9379> ltrim list01 1 2
+		OK
+		127.0.0.1:9379> lrange list01 0 -1
+		1) "4"
+		2) "3"
+	
+- **rpoplpush 源列表 目的列表**
+
+		127.0.0.1:9379> lrange list02 0 -1
+		1) "1"
+		2) "2"
+		3) "3"
+		4) "4"
+		5) "5"
+		127.0.0.1:9379> rpoplpush list01 list02
+		"3"
+		127.0.0.1:9379> lrange list02 0 -1
+		1) "3"
+		2) "1"
+		3) "2"
+		4) "3"
+		5) "4"
+		6) "5"
+
+- **lset key index value**
+
+		127.0.0.1:9379> lset list02 0 0
+		OK
+		127.0.0.1:9379> lrange list02 0 -1
+		1) "0"
+		2) "1"
+		3) "2"
+		4) "3"
+		5) "4"
+		6) "5"
+
+- **linsert key  before/after 值1 值2**
+
+		127.0.0.1:9379> linsert list02 before 2 1.5
+		(integer) 7
+		127.0.0.1:9379> linsert list02 after 2 2.5
+		(integer) 8
+		127.0.0.1:9379> lrange list02 0 -1
+		1) "0"
+		2) "1"
+		3) "1.5"
+		4) "2"
+		5) "2.5"
+		6) "3"
+		7) "4"
+		8) "5"
+
+**总结:**
+
+- 它是一个字符串链表，left、right都可以插入添加；
+- 如果键不存在，创建新的链表；
+- 如果键已存在，覆盖；
+- 如果值全移除，对应的键也就消失了。
+- 链表的操作无论是头和尾效率都极高，但假如是对中间元素进行操作，效率就很惨淡了。
+
+**Redis集合(Set)**
+
+
+
