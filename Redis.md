@@ -1214,7 +1214,7 @@ AOF文件持续增长而过大时，会fork出一条新进程来将文件重写(
 		127.0.0.1:9379> exec
 		(nil)
 
-		##unwatch(在实际应用中,如果监测提交失败，)
+		##unwatch(在实际应用中,如果监测提交失败，重新提交事务前需重新watch监测)
 		127.0.0.1:9379> watch age
 		OK
 		127.0.0.1:9379> set age 18
@@ -1235,3 +1235,389 @@ AOF文件持续增长而过大时，会fork出一条新进程来将文件重写(
 		##注意:一旦执行了exec之前加的监控锁全部都会被取消掉了**
 		##总结:Watch指令，类似乐观锁，事务提交时，如果Key的值已被别的客户端改变，比如某个list已被别的客户端push/pop过了，整个事务队列都不会被执行
 		##通过WATCH命令在事务执行之前监控了多个Keys，倘若在WATCH之后有任何Key的值发生了变化，EXEC命令执行的事务都将被放弃，同时返回Nullmulti-bulk应答以通知调用者事务执行失败
+
+**阶段**
+
+- 开启：以MULTI开始一个事务
+- 入队：将多个命令入队到事务中，接到这些命令并不会立即执行，而是放到等待执行的事务队列里面
+- 执行：由EXEC命令触发事务
+
+**特性**
+
+- 单独的隔离操作：事务中的所有命令都会序列化、按顺序地执行。事务在执行的过程中，不会被其他客户端发送来的命令请求所打断。
+- 没有隔离级别的概念：队列中的命令没有提交之前都不会实际的被执行，因为事务提交前任何指令都不会被实际执行，也就不存在”事务内的查询要看到事务里的更新，在事务外查询不能看到”这个让人万分头痛的问题
+- 不保证原子性：redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚
+
+# Redis的发布订阅 #
+（了解，一般实际应用中的消息中间件不会它）
+
+进程间的一种消息通信模式：发送者(pub)发送消息，订阅者(sub)接收消息。
+
+![](https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1567413517162&di=ad845928ec6767fcc576effcaafcbc36&imgtype=0&src=http%3A%2F%2Fimage.mamicode.com%2Finfo%2F201809%2F20180926231933462880.png)
+
+	PSUBSCRIBE pattern [pattern …] //订阅一个或多个符合给定模式的频道。
+	PUBLISH channel message //将信息 message 发送到指定的频道 channel
+	SUBSCRIBE channel [channel …]	//订阅给定的一个或多个频道的信息。
+	UNSUBSCRIBE [channel [channel …]]	//指示客户端退订给定的频道。
+	PUNSUBSCRIBE [pattern [pattern …]]	//指示客户端退订所有给定模式。
+	PUBSUB <subcommand> [argument [argument …]]	//查看订阅与发布系统状态
+
+**案例:**先订阅后发布后才能收到消息
+
+1. 可以一次性订阅多个，SUBSCRIBE c1 c2 c3
+2. 消息发布，PUBLISH c2 hello-redis
+
+		##Client
+		127.0.0.1:9379> SUBSCRIBE c1 c2 c3
+		Reading messages... (press Ctrl-C to quit)
+		1) "subscribe"
+		2) "c1"
+		3) (integer) 1
+		1) "subscribe"
+		2) "c2"
+		3) (integer) 2
+		1) "subscribe"
+		2) "c3"
+		3) (integer) 3
+		1) "message"
+		2) "c2"
+		3) "hello-redis"
+
+		##Server
+		127.0.0.1:9379> PUBLISH c2 hello-redis
+		(integer) 1
+
+3. 订阅多个，通配符*， PSUBSCRIBE new*
+4. 收取消息， PUBLISH new1 redis2015
+
+		##Client
+		127.0.0.1:9379> PSUBSCRIBE new*
+		Reading messages... (press Ctrl-C to quit)
+		1) "psubscribe"
+		2) "new*"
+		3) (integer) 1
+		1) "pmessage"
+		2) "new*"
+		3) "new1"
+		4) "redis2019"
+
+		##Server
+		127.0.0.1:9379> PUBLISH new1 redis2019
+		(integer) 1
+		
+
+# Redis的复制(Master/Slave) #
+
+主从复制，主机数据更新后根据配置和策略，自动同步到备机的master/slaver机制，Master以写为主，Slave以读为主
+
+**读写分离，容灾恢复**
+
+1. 主库不配从库配
+2. 从库配置：slaveof 主库IP 主库端口
+	1. 每次与master断开之后，都需要重新连接，除非你配置进redis.conf文件
+	2. info replication
+3. 修改配置文件细节操作
+	1. 拷贝多个redis.conf文件
+	2. 开启daemonize yes
+	3. Pid文件名字
+	4. 指定端口
+	5. Log文件名字
+	6. Dump.rdb名字
+
+**主从信息**
+
+**当设置了从库slaveof后，主库旧有数据都会同步到从库**
+
+**主库可读写,从库只能读，否则报(error) READONLY You can't write against a read only replica.**
+
+**当主库down机重启了，从库依然是从库不变**
+
+**当从库down机重启了，每次与master断开之后，都需要重新连接,不然默认是Master**
+
+**常用主从配置**
+
+- **一主两从**
+
+		##查看主库1信息
+		127.0.0.1:9381> info replication
+		role:master
+		connected_slaves:2
+		slave0:ip=127.0.0.1,port=9380,state=online,offset=92914,lag=1
+		slave1:ip=127.0.0.1,port=9381,state=online,offset=92914,lag=1
+		master_replid:6577efacebb57d282053a533fb12cb92ec71b4d1
+		master_replid2:0000000000000000000000000000000000000000
+		master_repl_offset:92914
+		second_repl_offset:-1
+		repl_backlog_active:1
+		repl_backlog_size:1048576
+		repl_backlog_first_byte_off
+
+		##查看从库1信息
+		127.0.0.1:9380> info replication
+		# Replication
+		role:slave
+		master_host:localhost
+		master_port:9379
+		master_link_status:up
+		master_last_io_seconds_ago:4
+		master_sync_in_progress:0
+		slave_repl_offset:93082
+		slave_priority:100
+		slave_read_only:1
+		connected_slaves:0
+		master_replid:6577efacebb57d282053a533fb12cb92ec71b4d1
+		master_replid2:0000000000000000000000000000000000000000
+		master_repl_offset:93082
+		second_repl_offset:-1
+		repl_backlog_active:1
+		repl_backlog_size:1048576
+		repl_backlog_first_byte_offset:1
+		repl_backlog_histlen:93082
+
+		##查看从库2信息
+		127.0.0.1:9381> info replication
+		# Replication
+		role:slave
+		master_host:localhost
+		master_port:9379
+		master_link_status:up
+		master_last_io_seconds_ago:3
+		master_sync_in_progress:0
+		slave_repl_offset:93194
+		slave_priority:100
+		slave_read_only:1
+		connected_slaves:0
+		master_replid:6577efacebb57d282053a533fb12cb92ec71b4d1
+		master_replid2:0000000000000000000000000000000000000000
+		master_repl_offset:93194
+		second_repl_offset:-1
+		repl_backlog_active:1
+		repl_backlog_size:1048576
+		repl_backlog_first_byte_offset:1
+		repl_backlog_histlen:93194
+- **薪火相传**(主->从(主)->从)
+	- 上一个Slave可以是下一个slave的Master，Slave同样可以接收其他slaves的连接和同步请求，那么该slave作为了链条中下一个的master,可以有效减轻master的写压力
+	- 中途变更转向:会清除之前的数据，重新建立拷贝最新的
+	- Slaveof 新主库IP 新主库端口
+
+			##把上面一主二从重新配置，主1down机后，两从库各自还是从库，把从二转向从一，此时从一还是从库就算底下多了从二跟随还是不能写入，此时把主一重新开启设值，主->从一->从二都可以获取到值,薪火相传成功！
+			##主配置
+			127.0.0.1:9379> info replication
+			# Replication
+			role:master
+			connected_slaves:1
+			slave0:ip=127.0.0.1,port=9380,state=online,offset=234,lag=1
+			master_replid:10a26e55189d023fb298848923017a6c429decbb
+			master_replid2:0000000000000000000000000000000000000000
+			master_repl_offset:234
+			second_repl_offset:-1
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:1
+			repl_backlog_histlen:234
+	
+			##从一配置(可看出底下多了一个从二跟随)
+			127.0.0.1:9380> info replication
+			# Replication
+			role:slave
+			master_host:localhost
+			master_port:9379
+			master_link_status:up
+			master_last_io_seconds_ago:9
+			master_sync_in_progress:0
+			slave_repl_offset:0
+			slave_priority:100
+			slave_read_only:1
+			connected_slaves:1
+			slave0:ip=127.0.0.1,port=9381,state=online,offset=0,lag=1
+			master_replid:10a26e55189d023fb298848923017a6c429decbb
+			master_replid2:0000000000000000000000000000000000000000
+			master_repl_offset:0
+			second_repl_offset:-1
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:1
+	
+			##从二配置
+			127.0.0.1:9381> info replication
+			# Replication
+			role:slave
+			master_host:localhost
+			master_port:9380
+			master_link_status:down
+			master_last_io_seconds_ago:-1
+			master_sync_in_progress:0
+			slave_repl_offset:94
+			master_link_down_since_seconds:45
+			slave_priority:100
+			slave_read_only:1
+			connected_slaves:0
+			master_replid:c6b6a0b02cc08a07cd3bbb1863d36300ec1d44e2
+			master_replid2:0000000000000000000000000000000000000000
+			master_repl_offset:94
+			second_repl_offset:-1
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:15
+			repl_backlog_histlen:80
+			
+
+- **反客为主**
+	- SLAVEOF no one 使当前数据库停止与其他数据库的同步，转成主数据库
+
+			##把主1down机后，从一反客为主当master成功,从二可以同步到数据，此时就算主1重新开启,都只是跟从一平起平坐为master，数据之间不互通
+			127.0.0.1:9380> slaveof no one
+			OK
+			127.0.0.1:9380> info replication
+			# Replication
+			role:master
+			connected_slaves:1
+			slave0:ip=127.0.0.1,port=9381,state=online,offset=781,lag=0
+			master_replid:cba3ba175d0d240dbd79097c9df403eb142c8764
+			master_replid2:10a26e55189d023fb298848923017a6c429decbb
+			master_repl_offset:781
+			second_repl_offset:768
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:1
+			repl_backlog_histlen:781
+			127.0.0.1:9380> keys *
+			1) "k2"
+			2) "k3"
+			3) "k1"
+
+**复制原理**
+
+- Slave启动成功连接到master后会发送一个sync命令
+- Master接到命令启动后台的存盘进程，同时收集所有接收到的用于修改数据集命令，在后台进程执行完毕之后，master将传送整个数据文件到slave,以完成一次完全同步
+- 全量复制：而slave服务在接收到数据库文件数据后，将其存盘并加载到内存中。
+- 增量复制：Master继续将新的所有收集到的修改命令依次传给slave,完成同步
+- 但是只要是重新连接master,一次完全同步（全量复制)将被自动执行
+
+**哨兵模式(sentinel)**
+
+反客为主的自动版，能够后台监控主机是否故障，如果故障了根据投票数自动将从库转换为主库
+
+**步骤**
+
+1. 建立sentinel.conf文件，名字绝不能错
+2. 配置哨兵文件
+
+		##sentinel monitor 被监控数据库名字(自己起名字) 127.0.0.1 6379 1
+		##最后一个数字1，表示主机挂掉后salve投票看让谁接替成为主
+3. 启动哨兵:Redis-sentinel /usr/common/sentinel.conf 
+
+	- 正常情况是参考上面一主两从情况
+	- 原有的主一down机了
+		
+			18238:X 03 Sep 2019 17:40:00.588 # +monitor master redis9379 127.0.0.1 9379 quorum 1
+			18238:X 03 Sep 2019 17:40:00.588 * +slave slave 127.0.0.1:9380 127.0.0.1 9380 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:40:00.590 * +slave slave 127.0.0.1:9381 127.0.0.1 9381 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.195 # +sdown master redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.195 # +odown master redis9379 127.0.0.1 9379 #quorum 1/1
+			18238:X 03 Sep 2019 17:41:12.195 # +new-epoch 1
+			18238:X 03 Sep 2019 17:41:12.195 # +try-failover master redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.198 # +vote-for-leader 075c1d89da183fec1b220bd8296a51b59bc76d0b 1
+			18238:X 03 Sep 2019 17:41:12.198 # +elected-leader master redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.198 # +failover-state-select-slave master redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.250 # +selected-slave slave 127.0.0.1:9380 127.0.0.1 9380 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.250 * +failover-state-send-slaveof-noone slave 127.0.0.1:9380 127.0.0.1 9380 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.340 * +failover-state-wait-promotion slave 127.0.0.1:9380 127.0.0.1 9380 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.714 # +promoted-slave slave 127.0.0.1:9380 127.0.0.1 9380 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.714 # +failover-state-reconf-slaves master redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:12.773 * +slave-reconf-sent slave 127.0.0.1:9381 127.0.0.1 9381 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:13.778 * +slave-reconf-inprog slave 127.0.0.1:9381 127.0.0.1 9381 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:13.778 * +slave-reconf-done slave 127.0.0.1:9381 127.0.0.1 9381 @ redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:13.837 # +failover-end master redis9379 127.0.0.1 9379
+			18238:X 03 Sep 2019 17:41:13.837 # +switch-master redis9379 127.0.0.1 9379 127.0.0.1 9380
+			18238:X 03 Sep 2019 17:41:13.837 * +slave slave 127.0.0.1:9381 127.0.0.1 9381 @ redis9379 127.0.0.1 9380
+			18238:X 03 Sep 2019 17:41:13.837 * +slave slave 127.0.0.1:9379 127.0.0.1 9379 @ redis9379 127.0.0.1 9380
+			18238:X 03 Sep 2019 17:41:43.857 # +sdown slave 127.0.0.1:9379 127.0.0.1 9379 @ redis9379 127.0.0.1 9380
+
+			##主一down机后开启投票,投票过程2个从各有一票没选出master,最后选出9380为master
+
+	- 重新主从继续开工，从一变主1,从二还是从
+
+			##从一9380变主一
+			127.0.0.1:9380> info replication
+			# Replication
+			role:master
+			connected_slaves:1
+			slave0:ip=127.0.0.1,port=9381,state=online,offset=4336,lag=0
+			master_replid:93da34896904e09cbaa277377afc1535307d3ea0
+			master_replid2:94fb7f736b3763ebdd785d55287bc309c5701944
+			master_repl_offset:4336
+			second_repl_offset:2946
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:1
+			repl_backlog_histlen:4336
+
+			##从二9381还是从
+			127.0.0.1:9381> info replication
+			# Replication
+			role:slave
+			master_host:127.0.0.1
+			master_port:9380
+			master_link_status:up
+			master_last_io_seconds_ago:1
+			master_sync_in_progress:0
+			slave_repl_offset:4604
+			slave_priority:100
+			slave_read_only:1
+			connected_slaves:0
+			master_replid:93da34896904e09cbaa277377afc1535307d3ea0
+			master_replid2:94fb7f736b3763ebdd785d55287bc309c5701944
+			master_repl_offset:4604
+			second_repl_offset:2946
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:1
+			repl_backlog_histlen:4604
+
+	- **如果之前的主1重启回来了,会变成从库**
+	
+			##旧主一9379变从库
+			127.0.0.1:9379> info replication
+			# Replication
+			role:slave
+			master_host:127.0.0.1
+			master_port:9380
+			master_link_status:up
+			master_last_io_seconds_ago:1
+			master_sync_in_progress:0
+			slave_repl_offset:35747
+			slave_priority:100
+			slave_read_only:1
+			connected_slaves:0
+			master_replid:93da34896904e09cbaa277377afc1535307d3ea0
+			master_replid2:0000000000000000000000000000000000000000
+			master_repl_offset:35747
+			second_repl_offset:-1
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:35457
+			repl_backlog_histlen:291
+
+			##新主一底下多了9379从库
+			127.0.0.1:9380> info replication
+			# Replication
+			role:master
+			connected_slaves:2
+			slave0:ip=127.0.0.1,port=9381,state=online,offset=54229,lag=1
+			slave1:ip=127.0.0.1,port=9379,state=online,offset=54229,lag=1
+			master_replid:93da34896904e09cbaa277377afc1535307d3ea0
+			master_replid2:94fb7f736b3763ebdd785d55287bc309c5701944
+			master_repl_offset:54229
+			second_repl_offset:2946
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:1
+			repl_backlog_histlen:54229
+
+
+**一组sentinel能同时监控多个Master**
+
+**复制的缺点:复制延时**
+
+由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave机器数量的增加也会使这个问题更加严重。
