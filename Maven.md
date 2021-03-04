@@ -193,6 +193,367 @@ maven提供的功能,用来执行清理、编译、测试、报告、打包的�
 
 2. jar包冲突问题
 
-   因为在开发
+   在开发过程中,pom文件中导入的的`servlet-api-xxx.jar`和maven自带的tomcat中的Jar包发生了冲突
 
-pom.xml中导入的jar包和maven自带的tomcat中的jar包发生了冲突
+   	<!--放置的都是项目所要依赖的jar包-->
+   	<!--provided的意思是编译时使用它,运行时不使用-->
+   	<dependency>
+   	  <groupId>javax.servlet</groupId>
+   	  <artifactId>servlet-api</artifactId>
+   	  <version>2.5</version>
+   	  <scope>provided</scope>	<!--解决jar包冲突问题就是添加scope,将其设置为provided-->
+   	</dependency>
+   	<dependency>
+   	  <groupId>javax.servlet.jsp</groupId>
+   	  <artifactId>jsp-api</artifactId>
+   	  <version>2.0</version>
+   	  <scope>provided</scope>	<!--解决jar包冲突问题就是添加scope,将其设置为provided-->
+   	</dependency>
+
+## war和war exploded的区别
+
+1. war模式这种可以称之为是发布模式，看名字也知道，这是先打成war包，再发布
+2. war exploded模式是直接把文件夹、jsp页面 、classes等等移到Tomcat 部署文件夹里面，进行加载部署。因此这种方式支持热部署，一般在开发的时候也是用这种方式
+3. 在平时开发的时候，使用热部署的话，应该对Tomcat进行相应的设置，这样的话修改的jsp界面什么的东西才可以及时的显示出来
+
+# Maven的依赖范围
+
+maven的依赖范围包括:compile、provide、runtime、test、system
+
+1. compile:编译范围的依赖会用在编译,测试,运行,由于运行时需要,所以编译范围的依赖会被打包(会被打包)
+2. test:test范围依赖在编译和运行时都不需要,只在测试编译和测试运行时需要。例如:Junit。由于运行时不需要,所以test范围依赖不会被打包(不会打包)
+3. provide:provide依赖只有当jdk或者一个容器已提供该依赖之后才使用。provide依赖在编译和测试时需要,在运行时不需要。例如:servletapi被Tomcat容器提供了(不会打包)
+4. runtime:runtime依赖在运行和测试系统时需要,但在编译时不需要。例如:jdbc的驱动包。由于运行时需要,所以runtime范围的依赖会被打包(会打包)
+5. system:system范围依赖与provide类似,但是必须显示的提供一个对于本地系统中jar文件的路径。一般不推荐使用
+
+| 依赖范围 | 对于编译classpath有效 | 对于测试classpath有效 | 对于运行时classpath有效 |            例子            |
+| :------: | :-------------------: | :-------------------: | :---------------------: | :------------------------: |
+| compile  |           Y           |           Y           |            Y            |        spring-core         |
+|   test   |           -           |           Y           |            Y            |           Junit            |
+| provided |           Y           |           Y           |            -            |        servlet-api         |
+| runtime  |           -           |           Y           |            Y            |          JDBC驱动          |
+|  system  |           Y           |           Y           |            -            | 本地的,maven仓库之外的类库 |
+
+例:
+
+```
+		<!--导入mysql驱动-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+			<!--runtime表示编译器不使用它,运行期使用它-->
+			<scope>runtime</scope>
+            <version>8.0.17</version>
+        </dependency>
+        <!--导入servlet相关依赖,request不报错-->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+			<!--provided的意思是编译时使用它,运行时不使用-->
+            <scope>provided</scope>
+        </dependency>
+		<--jsp-->	
+		<dependency>
+		  <groupId>javax.servlet.jsp</groupId>
+		  <artifactId>jsp-api</artifactId>
+		  <version>2.0</version>
+		  <scope>provided</scope>
+		</dependency>
+		<!--system 编译测试有用、不会运行打成jar-->
+		<dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <scope>system</scope>
+            <optional>true</optional>
+            <version>${java.version}</version>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+
+```
+
+# Maven的常用设置
+
+## 全局变量
+
+1. 在Maven的pom.xml文件中,properties用于定义全局变量,POM中通过${property_name}的形式引用变量的值。定义全局变量:
+
+   ```
+   	<properties>
+   		<spring.version>4.3.10.RELEASE</spring.version>
+   	</properties>
+   ```
+
+2. 引用全局变量:
+
+   ```
+   	<dependency>
+   		<groupId>org.springframework</groupId>
+   		<artifactId>spring-context</artifactId>
+   		<version>${spring.version}</version>
+   	</dependency>
+   ```
+
+## Maven系统采用的变量
+
+```
+<properties>
+	<!--源码编译jdk版本-->		
+	<maven.compiler.source>1.8</maven.compiler.source>
+	<!--运行代码的jdk版本-->
+	<maven.compiler.target>1.8</maven.compiler.target>
+	<!--项目构建使用的编码,避免中文乱码-->
+	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<!--生成报告的编码-->
+	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+</properties>
+```
+
+## 指定资源位置
+
+1.  src/main/java和src/test/java这两个目录中的所有*.java文件会分别在comile和test-comiple阶段被编译,编译结果分别放到了target/classes和targe/test-classes目录中,但是这两个目录中的其他文件都会被忽略掉,如果需要把src目录下的文件包放到target/classes目录,作为输出的jar一部分。需要指定资源文件位置。以下内容放到buid标签中
+
+2. 假设要把源目录里src/main/java/com的*.txt输出到编译后以target/classes目录中
+
+3. 在pom.xml添加如下内容,然后重新打包即可
+
+   ```
+   	<build>
+   	     <resources>
+   	         <resource>
+   	             <!--所在的目录-->
+   	             <directory>src/main/java</directory>
+   	             <includes>
+   	                 <!--包括目录下的.properties,.xml 文件都会扫描到-->
+   	                 <include>**/*.properties</include>
+   	                 <include>**/*.xml</include>
+   	                 <include>**/*.txt</include>
+   	             </includes>
+   	             <!--filtering 选项 false 不启用过滤器， *.property 已经起到过滤的作用了 -->
+   	             <filtering>false</filtering>
+   	         </resource>
+   	     </resources>
+   	 </build>
+   ```
+
+## 将pom文件中的配置引入到properties文件中
+
+```
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.MF</include>
+                    <include>**/*.XML</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <!--资源文件的路径,默认位于${basedir}/src/main/resources/目录下-->
+                <directory>src/main/resources</directory>
+                <!--一组文件名的匹配模式,被匹配的资源文件将被构建过程处理-->
+                <includes>
+                    <include>**/*</include>
+                    <include>*</include>
+                </includes>
+                <!--filtering默认false,true表示通过参数对资源文件中的${key}
+                在编译时进行动态变更。替换源可紧-Dkey和pom中的<properties>值
+                或<filters>中指定的properties文件-->
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+
+```
+
+## Maven默认属性
+
+```
+	${basedir} 项目根目录  
+	${version}表示项目版本;  
+	${project.basedir}同${basedir};  
+	${project.version}表示项目版本,与${version}相同;  
+	${project.build.directory} 构建目录，缺省为target  
+	${project.build.sourceEncoding}表示主源码的编码格式;  
+	${project.build.sourceDirectory}表示主源码路径;  
+	${project.build.finalName}表示输出文件名称;  
+	${project.build.outputDirectory} 构建过程输出目录，缺省为target/classes 
+```
+
+```
+    输出结果为:
+	test=${pro.name}
+	# F:\\mavenTest\\A 项目根目录
+	basedir=${basedir}
+	basedir2=${project.basedir}
+	# version=1.0-SNAPSHOT
+	version=${version}
+	# project.build.directory=F:\\mavenTest\\A\\target 构建目录,缺省为target
+	project.build.directory=${project.build.directory}
+	# project.build.sourceDirectory=F:\\mavenTest\\A\\src\\main\\java
+	# 表示主源码的编码格式
+	project.build.sourceDirectory=${project.build.sourceDirectory}
+	# project.build.finalName=A-1.0-SNAPSHOT 表示输出文件名称
+	project.build.finalName=${project.build.finalName}
+	# project.build.outputDirectory=F:\\mavenTest\\A\\target\\classes
+	# 构建过程输出目录,缺省为target/classes
+	project.build.outputDirectory=${project.build.outputDirectory}
+```
+
+# Maven项目依赖、依赖冲突
+
+## 什么是依赖传递
+
+1. 在maven中,依赖是可以传递的,假设存在三个项目,分别是项目A,项目B以及项目C。假设C依赖B,B依赖A,那么我们可以根据maven项目依赖的特征不难推出项目C也依赖A
+
+![](http://120.77.237.175:9080/photos/maven/10.png)
+
+2. 通过上面的图可以看到,我们的web项目直接依赖了spring-webmvc,而spring-webmvc依赖了sping-aop、spring-beans等。最终的结果就是在我们的web项目中间接依赖了spring-aop、spring-beans等
+
+![](http://120.77.237.175:9080/photos/maven/11.png)
+
+## 什么是依赖冲突
+
+1. 加入如下坐标
+
+由于spring-webmvc中依赖了spring-core,而spring-core中依赖了commons-logging(1.1.3),而我们又引入了commons-loging1.2,就造成了冲突
+
+![](http://120.77.237.175:9080/photos/maven/12.png)
+
+2. 根据路径近者优先原则,我们项目中引入的commons-logging为1.2
+
+   ![](http://120.77.237.175:9080/photos/maven/13.png)
+
+## 如何解决依赖冲突
+
+### 使用maven提供的依赖调解原则
+
+1. 依赖调节原则 — 第一声明者优先原则(在 pom 文件中定义依赖，以先声明的依赖为准。其实就是根据坐标导入的顺序来确定最终使用哪个传递过来的依赖)
+   结论：通过上图可以看到，spring-aop和spring-webmvc都传递过来了spring-beans，但是因为spring-aop在前面，所以最终使用的spring-beans是由spring-aop传递过来的，而spring-webmvc传递过来的spring-beans则被忽略了
+
+   ![](http://120.77.237.175:9080/photos/maven/14.png)
+
+2. **`根据路径近者优先原则,`** 我们项目中引入的commons-logging为1.2
+
+3. 如果在同一个pom中引入了两个相同的jar包,以引入的最后一个为准
+
+   如下的配置引入的是1.2
+
+   ```
+       <dependencies>
+           <dependency>
+               <groupId>commons-logging</groupId>
+               <artifactId>commons-logging</artifactId>
+               <version>1.1.2</version>
+           </dependency>
+           <dependency>
+               <groupId>commons-logging</groupId>
+               <artifactId>commons-logging</artifactId>
+               <version>1.2</version>
+           </dependency>
+       </dependencies>
+   
+   ```
+
+### 可选依赖optional
+
+1.  新建项目A(类似于mysql)、B(类似于oracle),项目C(类似于业务层,引入A、B工程),项目D(类似于逻辑工程,引入了C)
+   C项目pom.xml如下：
+
+   ```
+   <?xml version="1.0" encoding="UTF-8"?>
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+       <parent>
+           <artifactId>mavenTest</artifactId>
+           <groupId>com.xiaozhi</groupId>
+           <version>1.0-SNAPSHOT</version>
+       </parent>
+       <modelVersion>4.0.0</modelVersion>
+   
+       <artifactId>C</artifactId>
+   
+       <dependencies>
+           <dependency>
+               <groupId>com.xiaozhi</groupId>
+               <artifactId>A</artifactId>
+               <version>1.0-SNAPSHOT</version>
+               <!-- optional=true,依赖不会传递，该项目依赖A
+                   之后依赖该项目的项目如果想要使用A，需要重新引入 -->
+               <optional>true</optional>
+           </dependency>
+           <dependency>
+               <groupId>com.xiaozhi</groupId>
+               <artifactId>B</artifactId>
+               <version>1.0-SNAPSHOT</version>
+               <optional>true</optional>
+           </dependency>
+       </dependencies>
+   </project>
+   
+   ```
+
+   ![](http://120.77.237.175:9080/photos/maven/15.png)
+
+详细说明以下问题
+
+1. 由于projectC使用到了两个来自projectA的类(OptionalFeatureAClass)和projectB的类(OptionalFeatureBClass).如果projectC没有依赖packageA和packageB，那么编译将会失败。
+
+2. projectD依赖projectC，但是对于projectD来说，类(OptionalFeatureAClass)和类(OptionalFeatureBClass)是可选的特性，所以为了让最终的war/ejbpackage不包含不必要的依赖，使用optional声明当前依赖是可选的,默认情况下也不会被其他项目继承(好比Java中的final类，不能被其他类继承一样)
+
+   ![](http://120.77.237.175:9080/photos/maven/16.png)
+
+3. 如果projectD确实需要用到projectC中的OptionalFeatureAClass怎么办呢？
+   那我们就需要在projectD的pom.xml中显式的添加声明projectA依赖,继续看下图ProjectD需要用到ProjectA的OptionalFeatureAClass,那么需要在ProjectD的pom.xml文件中显式的添加对ProjectA的依赖
+   ![](http://120.77.237.175:9080/photos/maven/17.png)
+
+4. 到这也就很好理解为什么Maven为什么要设计optional关键字了,假设一个关于数据库持久化的项目(ProjectC),为了适配更多类型的数据库持久化设计,比如Mysql持久化设计(ProjectA)和Oracle持久化设计(ProjectB),当我们的项目(ProjectD)要用的ProjectC的持久化设计,不可能既引入mysql驱动又引入oracle驱动吧,所以我们要显式的指定一个,就是这个道理了
+   
+
+## 排除依赖
+
+可以使用exclusions标签将传递过来的依赖排除出去
+
+![](http://120.77.237.175:9080/photos/maven/18.png)
+
+## 版本锁定[ 掌握 ]
+
+1. 采用直接锁定版本的方法确定依赖jar包的版本，版本锁定后则不考虑依赖的声明顺序或依赖的
+   路径，以锁定的版本为准添加到工程中，此方法在企业开发中经常使用
+
+2.  版本锁定的使用方式：
+
+   1. 在dependencyManagement标签中锁定依赖的版本
+
+      ![](http://120.77.237.175:9080/photos/maven/19.png)
+
+   2. 在dependencies标签中声明需要导入的maven坐标
+
+      ![](http://120.77.237.175:9080/photos/maven/20.png)
+
+# 分模块构建maven工程
+
+## 分模块构建maven工程分析
+
+不管是下面那种拆分方式,通常都会提供一个父工程，将一些公共的代码和配置提取到父工程中进行统一管理和配置
+
+1. 按照业务模块进行拆分,每个模块拆分成一个maven工程,例如将一个项目分为用户模块、订单模块、购物车模块等,每个模块都对应一个maven工程
+2. 按照层进行拆分,例如持久层、业务层、表现层等,每个层对应就是一个maven工程
+
+![](http://120.77.237.175:9080/photos/maven/21.png)
+
+## maven工程的继承
+
+1. 在Java语言中，类之间是可以继承的，通过继承，子类就可以引用父类中非private的属性和方法。同样，在maven工程之间也可以继承，子工程继承父工程后，就可以使用在父工程中引入的依赖。继承的目的是为了消除重复代码
+2. 被继承的maven工程通常被称为父工程,父工程的打包方式必须为pom,所以我们区分某个maven工程是否为父工程就要看这个工程的打包方式是否为pom
+3. 继承其他maven父工程的通常称为子工程,在pom.xml文件中通过parent标签进行父工程的继承
+
+![](http://120.77.237.175:9080/photos/maven/22.png)
+
+##  maven工程的聚合
+
+1.  在maven工程的pom.xml文件中可以使用<modules>标签将其他maven工程聚合到一起，聚合的目的是为了进行统一操作
+2. 例如拆分后的maven工程有多个，如果要进行打包，就需要针对每个工程分别执行打包命令，操作起来非常繁琐。这时就可以使用modules标签将这些工程统一聚合到maven工程中，需要打包的时候，只需要在此工程中执行一次打包命令，其下被聚合的工程就都会被打包了
+   ![](http://120.77.237.175:9080/photos/maven/23.png)
