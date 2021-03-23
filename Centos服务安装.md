@@ -242,17 +242,17 @@
    
 ```
    make && make install
-   ```
-   
+```
+
 > **注意**：如果在配置时报libzip版本太低，请卸载重新安装高版本
-   
+
 ```
    解决办法  这是由于系统的自带的 libzip版本低了，所以先卸载系统自带的libzip
    yum  -y remove libzip-devel
-   ```
-   
+```
 
-   
+
+
 ```
    configure: error: Please reinstall the libzip distribution
    在 https://libzip.org/download/ 下载源码，进行安装
@@ -295,8 +295,8 @@
    #安装过程中如果出现其它异常,说明还需要安装其它依赖,后补...
    #将php安装成php-fpm编译时报错/usr/lib64/libpthread.so.0: error adding symbols: DSO missing from command li
    #解决: 编译前执行 make clean 清除一下之前编译产生的旧objects
-   ```
-   
+```
+
 4. 安装后配置
 
    执行完安装命令后php7就已经安装在到了/usr/local/php目录下了。
@@ -760,6 +760,79 @@ Eshell V11.1.3  (abort with ^G)
     ```
     systemctl restart rabbitmq-server
     ```
+
+## 开机自启设置
+
+1. 在/etc/init.d 目录下新建一个 rabbitmq
+
+   具体脚本如下所示
+
+   ```sh
+   #!/bin/bash
+   #
+   # chkconfig: 2345 80 05
+   # description: rabbitmq 
+   # processname: rabbitmq
+    
+   #RabbitMQ安装目录
+   RABBITMQ_HOME=/usr/lib/rabbitmq/lib/rabbitmq_server-3.8.14
+   export RABBITMQ_HOME
+    
+   case "$1" in
+       start)
+       echo "Starting RabbitMQ ..."
+   	cd $RABBIT_HOME/sbin
+   	rabbitmq-server
+       ;;
+   stop)
+       echo "Stopping RabbitMQ ..."
+   	cd $RABBIT_HOME/sbin
+       rabbitmqctl stop
+       ;;
+   status)
+       echo "Status RabbitMQ ..."
+   	cd $RABBIT_HOME/sbin
+       rabbitmqctl status
+       ;;
+   restart)
+       echo "Restarting RabbitMQ ..."
+   	cd $RABBIT_HOME/sbin
+       rabbitmq-server
+       ;;
+    
+   *)
+       echo "Usage: $prog {start|stop|status|restart}"
+       ;;
+   esac
+   exit 0
+    
+   ```
+
+2. 对rabbitmq授予可执行权限
+
+   ```
+   chmod 777 rabbitmq
+   ```
+
+3. 添加rabbitmq服务到系统服务中
+
+   ```
+   chkconfig --add rabbitmq
+   ```
+
+4. 设置自启动
+
+   ```
+   chkconfig rabbitmq on
+   ```
+
+5. 查看自启动项是否设置成功
+
+   ```
+   chkconfig --list rabbitmq
+   ```
+
+   
 
 # 安装Elasticsearch
 
