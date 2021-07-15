@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="683b4131-bd86-46d3-a84a-b0ca333d9fd4" name="默认的" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeInsightWorkspaceSettings">
+    <option name="optimizeImportsOnTheFly" value="true" />
+  </component>
+  <component name="CompilerWorkspaceConfiguration">
+    <option name="MAKE_PROJECT_ON_SAVE" value="true" />
+    <option name="PARALLEL_COMPILATION" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="localRepository" value="D:\Server\LocalRepository" />
+        <option name="mavenHome" value="E:/Server/apache-maven-3.6.3" />
+        <option name="userSettingsFile" value="E:\Server\apache-maven-3.6.3\conf\settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="jdkForImporter" value="1.8" />
+        <option name="vmOptionsForImporter" value="--Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="MavenRunner">
+    <option name="jreName" value="#JAVA_HOME" />
+    <option name="vmOptions" value="-DarchetypeCatalog=internal" />
+  </component>
+  <component name="ProjectId" id="1vIaScOMjxWHmssCZskwz4LNLVH" />
+  <component name="ProjectViewState">
+    <option name="abbreviatePackageNames" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RequestMappingsPanelOrder0" value="0" />
+    <property name="RequestMappingsPanelOrder1" value="1" />
+    <property name="RequestMappingsPanelWidth0" value="75" />
+    <property name="RequestMappingsPanelWidth1" value="75" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="MavenSettings" />
+  </component>
+  <component name="RebelAgentSelection">
+    <selection>jr</selection>
+  </component>
+  <component name="RunManager" selected="应用程序.IdGeneratorSnowflake">
+    <configuration name="IdGeneratorSnowflake" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.snowflake.demo.IdGeneratorSnowflake" />
+      <module name="snowflake" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.snowflake.demo.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SnowflakeApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="snowflake" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.snowflake.demo.SnowflakeApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="应用程序.IdGeneratorSnowflake" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SshConsoleOptionsProvider">
+    <option name="myEncoding" value="UTF-8" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="683b4131-bd86-46d3-a84a-b0ca333d9fd4" name="默认的" comment="" />
+      <created>1626252057470</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1626252057470</updated>
+      <workItem from="1626252062189" duration="6499000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1877" height="349" key="GridCell.Tab.0.bottom" timestamp="1626319109203">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="349" key="GridCell.Tab.0.bottom/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626319109203" />
+    <state width="1877" height="349" key="GridCell.Tab.0.center" timestamp="1626319109203">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="349" key="GridCell.Tab.0.center/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626319109203" />
+    <state width="1877" height="349" key="GridCell.Tab.0.left" timestamp="1626319109202">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="349" key="GridCell.Tab.0.left/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626319109202" />
+    <state width="1877" height="349" key="GridCell.Tab.0.right" timestamp="1626319109203">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="349" key="GridCell.Tab.0.right/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626319109203" />
+    <state width="1877" height="300" key="GridCell.Tab.1.bottom" timestamp="1626318321747">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="300" key="GridCell.Tab.1.bottom/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626318321747" />
+    <state width="1877" height="300" key="GridCell.Tab.1.center" timestamp="1626318321747">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="300" key="GridCell.Tab.1.center/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626318321747" />
+    <state width="1877" height="300" key="GridCell.Tab.1.left" timestamp="1626318321747">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="300" key="GridCell.Tab.1.left/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626318321747" />
+    <state width="1877" height="300" key="GridCell.Tab.1.right" timestamp="1626318321747">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="300" key="GridCell.Tab.1.right/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626318321747" />
+    <state x="461" y="164" key="SettingsEditor" timestamp="1626252079110">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="461" y="164" key="SettingsEditor/0.0.1920.1040/-1920.84.1920.1040@0.0.1920.1040" timestamp="1626252079110" />
+  </component>
+</project>
