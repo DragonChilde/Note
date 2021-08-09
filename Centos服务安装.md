@@ -239,7 +239,58 @@
    --disable-fileinfo
    PKG_CONFIG_PATH=/usr/local/libzip/lib64/pkgconfig/		[指定下面安装的libzip的pkg路径,否则编译的时候会提示找不以libzip]
    ```
-   
+
+```
+./configure \
+--prefix=/usr/local/php \
+--exec-prefix=/usr/local/php \
+--bindir=/usr/local/php/bin \
+--sbindir=/usr/local/php/sbin \
+--includedir=/usr/local/php/include \
+--libdir=/usr/local/php/lib/php \
+--mandir=/usr/local/php/php/man \
+--with-config-file-path=/usr/local/php/etc \
+--with-mysql-sock=/tmp/mysql.sock \
+--with-mhash \
+--with-openssl \
+--with-mysqli=shared,mysqlnd \
+--with-pdo-mysql=shared,mysqlnd \
+--with-gd \
+--with-iconv \
+--with-zlib \
+--enable-zip \
+--enable-inline-optimization \
+--disable-debug \
+--disable-rpath \
+--enable-shared \
+--enable-xml \
+--enable-bcmath \
+--enable-shmop \
+--enable-sysvsem \
+--enable-mbregex \
+--enable-mbstring \
+--enable-ftp \
+--enable-pcntl \
+--enable-sockets \
+--with-xmlrpc \
+--enable-soap \
+--without-pear \
+--with-gettext \
+--enable-session \
+--with-curl \
+--with-jpeg-dir \
+--with-freetype-dir \
+--enable-opcache \
+--enable-fpm \
+--with-fpm-user=nginx \
+--with-fpm-group=nginx \
+--without-gdbm \
+--enable-fast-install \
+--disable-fileinfo
+```
+
+
+
 ```
    make && make install
 ```
@@ -258,17 +309,23 @@
    在 https://libzip.org/download/ 下载源码，进行安装
    wget https://libzip.org/download/libzip-1.7.3.tar.xz
    
+   #https://cmake.org/download/ 官网下载网址
    #(由于1.5以及以上的安装方式和版本下的不同，所以这里还需要安装cmake,安装cmake过程比较长)
    #wget https://github.com/Kitware/CMake/releases/download/v3.15.2/cmake-3.15.2.tar.gz
    tar -xvf cmake-3.15.2.tar.gz
    cd cmake-3.15.2
-   ./configure
+   ##cmake在配置时有两种方式，一个是经常的使用./configure，另一个就是./bootstrap。我查看了configure文件内容，发现使用./configure最后也是去调用bootstrap，所以我就直接使用bootstrap
+   ##./configure
+   ./bootstrap --prefix=/usr/local/cmake
    make
    make install
-   #安装成功后，下面添加cmake环境变量，编辑 /etc/profile.d/cmake.sh 文件，写入以下内容：
-   export CMAKE_HOME=/usr/local/cmake-3.15.2
-   export PATH=$PATH:$CMAKE_HOME/bin
-   保存并退出，执行命令让cmake环境文件生效
+   #为cmake创建软链接
+   cd /usr/bin
+   sudo ln -s /usr/local/cmake/bin/cmake cmake
+   #添加系统环境变量
+   sudo vi /etc/profile
+   然后在profile文件的最后添加一行
+   export PATH=$PATH:/usr/local/cmake/bin
    source /etc/profile
    此时，你再次查看cmake版本，就已经是3.15.2了
    cmake --version
@@ -312,7 +369,7 @@
    #添加以下内容
    PATH=/usr/local/php/bin:/usr/local/php/sbin:$PATH
    #保存后刷新环境变量
-   source /etc/pro:file
+   source /etc/profile
    ```
 
    配置php,修改php配置文件之添加php配置文件
@@ -688,7 +745,7 @@ fi
    ```
    erl
    Erlang/OTP 23 [erts-11.1.3] [source] [64-bit] [smp:1:1] [ds:1:1:10] [async-threads:1] [hipe]
-Eshell V11.1.3  (abort with ^G)
+   Eshell V11.1.3  (abort with ^G)
    //命令halt().退出erl
    ```
    
