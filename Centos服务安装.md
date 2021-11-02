@@ -691,6 +691,8 @@ yum -y install wget
    java -version
    ```
 
+------
+
 # 安装Nacos
 
 > 注意:启动不了,没有任何报错,后台没有服务是因为启动的指定内存与现有机器的空闲内存不足
@@ -714,7 +716,9 @@ else
 fi
 ```
 
-可以看到这段配置 ： `JAVA_OPT="${JAVA_OPT} -Xms512m -Xmx512m -Xmn256m"`,将512修改为64即可
+可以看到这段配置 ： `JAVA_OPT="${JAVA_OPT} -Xms512m -Xmx512m -Xmn256m"`,将512修改为128即可
+
+------
 
 # 安装RabbitMQ
 
@@ -889,7 +893,14 @@ fi
    chkconfig --list rabbitmq
    ```
 
-   
+
+------
+
+# 安装Git
+
+
+
+------
 
 # 安装Elasticsearch
 
@@ -988,4 +999,245 @@ cp redis.conf /usr/local/redis/
    systemctl status redis
    ```
 
+
+------
+
+# 安装Mysql5.7
+
+[下载地址](https://downloads.mysql.com/archives/community/)
+
+1. 下载mysql离线安装包
+
+   选择如下：
+
+   【Red Hat Enterprise Linux 7 / Oracle Linux】
+
+   【Red Hat Enterprise Linux 7 / Oracle Linux 7 (x86, 64-bit)】
+
+   选择完整的**RPM Bundle**下载
+
+2. 上传tar包至服务器
+
+3. 删除原有的mariadb或者mysql
+
+   > 　注：卸载之前请关闭mysql服务，命令：
+   >
+   > ```
+   > systemctl stop mysqld 
+   > ```
+
+   ```shell
+   先查看一下是否已经安装了
+   rpm -qa | grep mysql
+   rpm -qa | grep mariadb
    
+   #按照顺序卸载：
+   rpm -e --nodeps mysql-community-server
+   rpm -e --nodeps mysql-community-client
+   rpm -e --nodeps mysql-community-libs
+   rpm -e --nodeps mysql-community-common
+   
+   #删除mariadb，命令：
+   rpm -e --nodeps mariadb-libs
+   ```
+
+   　**卸载完基本的环境后，我们要清理依赖的文件（数据库配置文件及数据库数据文件）**
+
+   ```shell
+   #删除数据库配置文件（一般情况下卸载了mysql这个文件也会被自动删除）
+       rm -rf  /etc/my.cnf
+   #删除数据库数据文件（包含系统数据库表和自定义数据库表）
+       rm -rf /var/lib/mysql
+   #删除日志临时文件（比如安装后产生密码的文件，不删除会发现安装后查询2个初始密码，但以下面的为主）
+       rm -rf /var/log/mysqld.log
+   ```
+
+4. 解压缩mysql离线安装包
+
+   ```shell
+   cd /opt/
+   tar -xvf mysql-5.7.35-1.el7.x86_64.rpm-bundle.tar
+   ```
+
+   解压缩之后，包含以下rpm包
+
+   ```shell
+   -rw-r--r--. 1 7155 31415    317800 6月   8 17:15 mysql-community-common-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415   4120044 6月   8 17:15 mysql-community-devel-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415  47722528 6月   8 17:15 mysql-community-embedded-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415  23313776 6月   8 17:15 mysql-community-embedded-compat-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415 132130800 6月   8 17:15 mysql-community-embedded-devel-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415   2473348 6月   8 17:15 mysql-community-libs-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415   1263816 6月   8 17:15 mysql-community-libs-compat-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415 182213816 6月   8 17:15 mysql-community-server-5.7.35-1.el7.x86_64.rpm
+   -rw-r--r--. 1 7155 31415 125392624 6月   8 17:16 mysql-community-test-5.7.35-1.el7.x86_64.rpm
+   ```
+
+5. 安装rmp包
+
+   > 安装时必须严格遵守安装顺序 **依赖关系依次为 common → libs → client → server**
+   >
+   > **注：ivh中， i-install安装；v-verbose进度条；h-hash哈希校验**
+
+   ```shell
+   rpm -ivh mysql-community-common-5.7.35-1.el7.x86_64.rpm
+   rpm -ivh mysql-community-libs-5.7.35-1.el7.x86_64.rpm 
+   rpm -ivh mysql-community-client-5.7.35-1.el7.x86_64.rpm
+   rpm -ivh mysql-community-server-5.7.35-1.el7.x86_64.rpm
+   # 安装后查询安装的MySQL版本 
+   mysqladmin --version
+   ```
+
+6. 启动及查询状态
+
+   ```shell
+   # 查询MySQL在系统的状态
+   systemctl status mysqld
+   # 启动MySQL数据库
+   systemctl start mysqld
+   # 关闭MySQL数据库
+   systemctl stop mysqld
+   # 重启MySQL数据库
+   systemctl restart mysqld
+   # 查看MySQL进程
+   ps -ef | grep mysql
+   ```
+
+7. 登录安装的MySQL5.7
+
+   1. 查看临时密码
+
+      由于MySQL5.7.4之前的版本中默认是没有密码的，登录后直接回车就可以进入数据库，从而在里面进行设置密码等操作。其后版本对密码等安全相关操作进行了一些改变，在安装过程中，会在安装日志中生成一个临时密码
+
+      ```shell
+      #获取数据库临时密码：
+      grep 'temporary password' /var/log/mysqld.log
+      ```
+
+   2. 用临时密码登录数据库
+
+      ```mysql
+      mysql -u root -p 回车键
+      #然后输入临时密码（输入时不会显示出来，输入完直接回车）
+      ```
+
+   3. 修改mysql密码
+
+      初始化密码只是提供给你登录到内部，而我们进入到内部必须修改密码，否则无法对数据库操作
+
+      ```mysql
+       # new_password替换成自己的密码
+       ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password';
+      #什么？？不符合策略，这里告诉你，密码为8位并且包含特殊字符、大小写字母、数字
+      #如： ALTER USER 'root'@'localhost' IDENTIFIED BY  'aaAA$$!!66' ;
+      ```
+
+      查看密码策略及更改策略
+
+      这是因为`MySQL`有密码设置的规范，具体是与`validate_password_policy`的值有关：
+
+      |   Policy    |                       Tests Performed                        |
+      | :---------: | :----------------------------------------------------------: |
+      |  0 or LOW   |                            Length                            |
+      | 1 or MEDIUM | Length; numeric, lowercase/uppercase,and special characters  |
+      | 2 or STRONG | Length;numeric,lowercase/uppercase,and special characters;dictionary file |
+
+      ```mysql
+      #查看默认的策略配置 ： 
+      show variables like 'validate_password%';  
+      ```
+
+      ```mysql
+      mysql>  show variables like 'validate_password%';  
+      +--------------------------------------+--------+
+      | Variable_name                        | Value  |
+      +--------------------------------------+--------+
+      | validate_password_check_user_name    | OFF    |　　是否验证用户名
+      | validate_password_dictionary_file    |        |　　密码策略文件，策略为STRONG才需要
+      | validate_password_length             | 8      |　　密码长度
+      | validate_password_mixed_case_count   | 1      |　　大小写字符长度，至少一个
+      | validate_password_number_count       | 1      |　　数字至少一个
+      | validate_password_policy             | MEDIUM |　　密码策略
+      | validate_password_special_char_count | 1      |　　特殊字符至少一个
+      +--------------------------------------+--------+
+      ```
+
+      看到上面设置个密码那么复杂，还记不住，那我们修改一下策略（设置LOW并且长度设置为3）
+
+      ```mysql
+      set global validate_password_policy=0;       # 关闭密码复杂性策略(LOW)
+      set global validate_password_length=3;       # 设置密码复杂性要求密码最低长度为3
+      
+      select @@validate_password_policy;        # 查看密码复杂性策略
+      select @@validate_password_length;        # 查看密码复杂性要求密码最低长度大小
+      
+      show variables like 'validate_password%';   # 查询具体策略
+      +--------------------------------------+-------+
+      | Variable_name                        | Value |
+      +--------------------------------------+-------+
+      | validate_password_check_user_name    | OFF   |
+      | validate_password_dictionary_file    |       |
+      | validate_password_length             | 3     |
+      | validate_password_mixed_case_count   | 1     |
+      | validate_password_number_count       | 1     |
+      | validate_password_policy             | LOW   |
+      | validate_password_special_char_count | 1     |
+      +--------------------------------------+-------+
+      ```
+
+      ```mysql
+      #终于可以设置灵魂密码了 ： 
+      mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY '123456';
+      ```
+
+   4. 授权远程连接
+
+      ```mysql
+      #命令
+      mysql> show databases;
+      +--------------------+
+      | Database           |
+      +--------------------+
+      | information_schema |
+      | mysql              |
+      | performance_schema |
+      | sys                |
+      +--------------------+
+      4 rows in set (0.00 sec)
+      #命令
+      mysql> use mysql;
+      Database changed
+      #命令
+      mysql> select host, user, authentication_string, plugin from user;
+      +-----------+---------------+-------------------------------------------+-----------------------+
+      | host      | user          | authentication_string                     | plugin                |
+      +-----------+---------------+-------------------------------------------+-----------------------+
+      | localhost | root          | *6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9 | mysql_native_password |
+      | localhost | mysql.session | *THISISNOTAVALIDPASSWORDTHATCANBEUSEDHERE | mysql_native_password |
+      | localhost | mysql.sys     | *THISISNOTAVALIDPASSWORDTHATCANBEUSEDHERE | mysql_native_password |
+      +-----------+---------------+-------------------------------------------+-----------------------+
+      3 rows in set (0.00 sec)
+      #命令
+      mysql> update user set host = "%" where user='root';
+      Query OK, 1 row affected (0.00 sec)
+      Rows matched: 1  Changed: 1  Warnings: 0
+      #命令
+      mysql> select host, user, authentication_string, plugin from user;
+      +-----------+---------------+-------------------------------------------+-----------------------+
+      | host      | user          | authentication_string                     | plugin                |
+      +-----------+---------------+-------------------------------------------+-----------------------+
+      | %         | root          | *6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9 | mysql_native_password |
+      | localhost | mysql.session | *THISISNOTAVALIDPASSWORDTHATCANBEUSEDHERE | mysql_native_password |
+      | localhost | mysql.sys     | *THISISNOTAVALIDPASSWORDTHATCANBEUSEDHERE | mysql_native_password |
+      +-----------+---------------+-------------------------------------------+-----------------------+
+      3 rows in set (0.00 sec)
+      
+      mysql> flush privileges;
+      ```
+
+   5. 尝试使用navacat远程连接
+
+   
+
+   
+
