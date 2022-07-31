@@ -1237,7 +1237,101 @@ cp redis.conf /usr/local/redis/
 
    5. 尝试使用navacat远程连接
 
-   
+## `docker`安装Mysql配置主从
 
-   
+1. 拉取mysql容器
 
+   ```shell
+   docker pull mysql:5.7
+   ```
+
+2. 创建主从数据映射目录
+
+   ```
+   // 数据和配置不至于丢失
+   /mydata/mysql/master/conf.d
+   /mydata/mysql/slave/conf.d 
+   ```
+
+3. 创建master配置文件`/mydata/mysql/master/conf.d/my.cnf`
+
+   ```
+   [mysqld]
+   log-bin=master-bin
+   server-id=1
+   ```
+
+4. 创建slave配置文件`/mydata/mysql/slave/conf.d/my.cnf`
+
+   ```
+   [mysqld]
+   log-bin=slave-bin
+   server-id=2
+   ```
+
+5. 启动master服务
+
+   ```shell
+   $ docker run -d --name mysql-master \
+       -p 3306:3306 \
+       -v /mydata/mysql/master/conf.d/data:/var/lib/mysql \
+       -v /mydata/mysql/master/conf.d:/etc/mysql/conf.d \
+       -e MYSQL_ROOT_PASSWORD=root \
+       -d mysql:5.7
+   ```
+
+6. 启动slave服务
+
+   ```shell
+   $ docker run -d --name mysql-slave \
+       -p 3307:3306 \
+       -v /mydata/mysql/slave/conf.d/data:/var/lib/mysql \
+       -v /mydata/mysql/slave/conf.d:/etc/mysql/conf.d \
+       -e MYSQL_ROOT_PASSWORD=root \
+       -d mysql:5.7
+   ```
+
+7. 进入容器修改master slave的读写权限
+
+   ```shell
+   $ docker exec -it mysql-master /bin/sh
+   ```
+
+   ```shell
+   mysql -u root -p root
+   GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
+   ```
+
+8. 进入mysql-master查看master状态
+
+   ```
+   mysql> show master status;
+   +-------------------+----------+--------------+------------------+-------------------+
+   | File              | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
+   +-------------------+----------+--------------+------------------+-------------------+
+   | master-bin.000003 |      452 |              |                  |                   |
+   +-------------------+----------+--------------+------------------+-------------------+
+   ```
+
+9. 获取master容器的host
+
+   ```shell
+   $ docker inspect --format='{{.NetworkSettings.IPAddress}}' mysql-master
+   172.17.0.2
+   ```
+
+10. 进入mysql-slave关联主从模式
+
+    ```shell
+    // mysql shell
+    change master to master_host='172.17.0.2', master_user='root',master_password='root', master_log_file='master-bin.000003',master_log_pos=452;
+    ```
+
+    ```shell
+    // mysql shell
+    // 启用slave
+    start slave;
+    ```
+
+11. 测试主从
+    在master创建testdb数据库，再到slave中查看是否存在testdb库，若存在则基本完成，若未成功检查binlog、master host、position是否正确
