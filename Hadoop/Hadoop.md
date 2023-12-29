@@ -8,7 +8,7 @@
 
 3. 广义上来说，Hadoop通常是指一个更广泛的概念——**Hadoop生态圈**
 
-   ![](..\photos\Hadoop\01.jpg)
+   ![](../photos/Hadoop/01.jpg)
 
 ## Hadoop优势
 
@@ -19,7 +19,7 @@
 
 ## Hadoop组成
 
-![](..\photos\Hadoop\02.jpg)
+![](../photos/Hadoop/02.jpg)
 
 - 在 Hadoop1.x 时代 ， Hadoop中的`MapReduce`同时处理业务逻辑运算和资源的调度，耦合性较大。 
 - 在 Hadoop2.x 时代，增加 了Yarn。Yarn只负责资源的调度,`MapReduce `只负责运算。 
@@ -37,7 +37,7 @@ Hadoop Distributed File System，简称 **HDFS**，是一个分布式文件系�
 
 Yet Another Resource Negotiator 简称 YARN ，另一种资源协调者，是 Hadoop 的资源管理器
 
-![](..\photos\Hadoop\03.jpg)
+![](../photos/Hadoop/03.jpg)
 
 ### MapReduce 架构概述
 
@@ -46,15 +46,15 @@ MapReduce 将计算过程分为两个阶段：`Map `和 `Reduce`
 1. ``Map ``阶段并行处理输入数据
 2. `Reduce `阶段对 `Map `结果进行汇总
 
-![](..\photos\Hadoop\04.jpg)
+![](../photos/Hadoop/04.jpg)
 
 ### HDFS、YARN、MapReduce 三者关系
 
-![](..\photos\Hadoop\05.jpg)
+![](../photos/Hadoop/05.jpg)
 
 ### 大数据技术生态体系
 
-![](..\photos\Hadoop\06.jpg)
+![](../photos/Hadoop/06.jpg)
 
 图中涉及的技术名词解释如下
 
@@ -72,7 +72,7 @@ MapReduce 将计算过程分为两个阶段：`Map `和 `Reduce`
 
 ### 推荐系统框架图
 
-![](..\photos\Hadoop\07.jpg)
+![](../photos/Hadoop/07.jpg)
 
 ------
 
@@ -358,7 +358,7 @@ MapReduce 将计算过程分为两个阶段：`Map `和 `Reduce`
 
    1. 免密登录原理
 
-      ![](..\photos\Hadoop\08.jpg)
+      ![](../photos/Hadoop/08.jpg)
 
    2. 生成公钥和私钥
 
@@ -639,7 +639,7 @@ MapReduce 将计算过程分为两个阶段：`Map `和 `Reduce`
 
 日志聚集概念：应用运行完成以后，将程序运行日志信息上传到 HDFS 系统上
 
-![](..\photos\Hadoop\09.jpg)
+![](../photos/Hadoop/09.jpg)
 
 日志聚集功能好处：可以方便的查看到程序运行详情，方便开发调试
 
@@ -695,14 +695,14 @@ MapReduce 将计算过程分为两个阶段：`Map `和 `Reduce`
 
    2. 历史任务列表
 
-      ![](..\photos\Hadoop\10.jpg)
+      ![](../photos/Hadoop/10.jpg)
 
    3. 查看任务运行日志
 
-      ![](..\photos\Hadoop\11.jpg)
+      ![](../photos/Hadoop/11.jpg)
    4. 运行日志详情
 
-      ![](..\photos\Hadoop\12.jpg)
+      ![](../photos/Hadoop/12.jpg)
 
       
       
@@ -832,7 +832,7 @@ MapReduce 将计算过程分为两个阶段：`Map `和 `Reduce`
 
    找一个机器，作为时间服务器，所有的机器与这台集群时间进行定时的同步，生产环境 根据任务对时间的准确程度要求周期同步。测试环境为了尽快看到效果，采用 1 分钟同步一 次
 
-   ![](..\photos\Hadoop\13.jpg)
+   ![](../photos/Hadoop/13.jpg)
 
 2. 时间服务器配置（必须 root 用户）
 
@@ -988,7 +988,7 @@ MapReduce 将计算过程分为两个阶段：`Map `和 `Reduce`
 
 8. DataNode 和 NameNode 进程同时只能工作一个
 
-   ![](..\photos\Hadoop\14.jpg)
+   ![](../photos/Hadoop/14.jpg)
 
 9. 执行命令不生效，粘贴 Word 中命令时，遇到-和长–没区分开。导致命令失效
 
